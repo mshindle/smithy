@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Michael Shindle <mshindle@gmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/mshindle/smithy/config"
+	"github.com/mshindle/smithy/data"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -29,6 +30,8 @@ const defaultBaseDir = "$HOME/.smithy"
 const defaultSystemDir = "/etc/smithy"
 
 var cfgFile string
+var argAsString bool
+var processor data.Processor
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -61,7 +64,7 @@ func Execute() {
 
 func init() {
 	// initialize logging
-	log.SetOutput(os.Stdout)
+	log.SetOutput(os.Stderr)
 	log.SetLevel(log.WarnLevel)
 
 	// initialize cobra
@@ -91,7 +94,7 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fileUsed := viper.ConfigFileUsed()
-		fmt.Println("Using config file:", fileUsed)
+		log.WithField("file", fileUsed).Info("using config file")
 		viper.SetDefault("baseDir", filepath.Dir(fileUsed))
 	} else {
 		viper.SetDefault("baseDir", defaultBaseDir)

@@ -1,0 +1,8 @@
+{
+    "mongo": {
+        "host": "mongo.example.com",
+        "password": "tiger",
+        "user": "joe.public"
+    },
+    "token": "secret token"
+}

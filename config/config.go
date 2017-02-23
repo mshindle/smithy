@@ -69,7 +69,7 @@ func absPathToKey(key string) string {
 	if filepath.IsAbs(key) {
 		return key
 	}
-	return filepath.Join(config.BaseDir, key)
+	return filepath.Join(expandPath(config.BaseDir), key)
 }
 
 // expandPath runs a crude shell expansion on the given path

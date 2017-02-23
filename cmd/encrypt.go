@@ -1,22 +1,16 @@
 // Copyright © 2017 Michael Shindle <mshindle@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmd
 
@@ -28,12 +22,10 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/mshindle/smithy/config"
 	"github.com/mshindle/smithy/crypt"
+	"github.com/mshindle/smithy/data"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var argAsString bool
-var processor config.Processor
 
 // encryptCmd represents the encrypt command
 var encryptCmd = &cobra.Command{
@@ -44,9 +36,9 @@ var encryptCmd = &cobra.Command{
 		argAsString = viper.GetBool("string")
 		switch viper.GetString("format") {
 		case "yaml", "yml":
-			processor = config.NewYamlProcessor()
+			processor = data.NewYamlProcessor()
 		default:
-			log.WithField("format", viper.GetBool("format")).Fatal("unsupported format")
+			log.WithField("format", viper.GetString("format")).Fatal("unsupported format")
 		}
 	},
 	Run: encrypt,
@@ -63,27 +55,27 @@ func init() {
 }
 
 func encrypt(cmd *cobra.Command, args []string) {
-	var data [][]byte
+	var d [][]byte
 	var err error
 	var encryptedValues = make(map[string]interface{})
 	var label = viper.GetString("label")
 
-	data, err = parseEncryptArgs(args)
+	d, err = parseEncryptArgs(args)
 	if err != nil {
 		log.WithError(err).Error("could not encrypt args")
 		return
 	}
 
-	if len(data) == 1 {
-		encryptedValues[label], err = crypt.EncryptToString(data[0], label, config.PublicKey())
+	if len(d) == 1 {
+		encryptedValues[label], err = crypt.EncryptToString(d[0], label, config.PublicKey())
 		if err != nil {
 			log.WithError(err).Fatal("encryption failed")
 			return
 		}
 	} else {
-		strings := make([]string, len(data))
-		for i := range data {
-			strings[i], err = crypt.EncryptToString(data[i], label, config.PublicKey())
+		strings := make([]string, len(d))
+		for i := range d {
+			strings[i], err = crypt.EncryptToString(d[i], label, config.PublicKey())
 			if err != nil {
 				log.WithError(err).Fatal("encryption failed")
 				return
@@ -104,7 +96,7 @@ func encrypt(cmd *cobra.Command, args []string) {
 }
 
 func parseEncryptArgs(args []string) ([][]byte, error) {
-	var data [][]byte
+	var d [][]byte
 	var err error
 
 	switch len(args) {
@@ -112,22 +104,22 @@ func parseEncryptArgs(args []string) ([][]byte, error) {
 		if argAsString {
 			return nil, errors.New("must specify at least one argument with --string flag")
 		}
-		data = make([][]byte, 1)
-		data[0], err = ioutil.ReadAll(os.Stdin)
+		d = make([][]byte, 1)
+		d[0], err = ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			log.Error("could not read from stdin")
 		}
 	default:
-		data = make([][]byte, len(args))
+		d = make([][]byte, len(args))
 		for i, arg := range args {
-			data[i], err = parseArg(arg)
+			d[i], err = parseArg(arg)
 			if err != nil {
 				log.WithField("arg", arg).Error("could not parse arg")
 				break
 			}
 		}
 	}
-	return data, err
+	return d, err
 }
 
 func parseArg(arg string) ([]byte, error) {

@@ -1,0 +1,6 @@
+mongo:
+  host: "mongo.example.com"
+  user: "joe.public"
+  password: ENC[nptX0bkiA5MWUnQxZ02wTxMtLjP/3nemG6/4L/NDYGKNEGf2j6HOptnimPAaCR+kuJVfxNocF3ZQAHS5iWHl41RjZwmcEu7e9OYq14XgU/Ot7lt+9/DmPIyVYETiYprp45csuV5h/QvYfgrO8IoMZaDUM/AU8UeQsqk3rmdBtPU=]
+token: ENC[lnjBF7G1zETHHArbSKaOv+jiH02HzL8WDzpOR51uS23q+iKp0wMBUoFToKbUJg1SgkqNjQzRJE58M66qwT9XHaAJM7j4EAOACPmOe1L2YIrodnQxt7IvtuTzreBFppBhcxSk/SdYT1MdiUPXQKidKW7EW+vuFIjTwC8C9uTZhDc=]
+port: 1181
