@@ -18,17 +18,17 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
 
 	log "github.com/Sirupsen/logrus"
 )
 
 // DecryptFromString decrypts a standard base64
-// encoded, as defined in RFC 4648, wrapped in an
+// encoded string, as defined in RFC 4648, wrapped in an
 // "ENC[" and "]" construct
 func DecryptFromString(s string, label string, file string) ([]byte, error) {
 	b64string := s[4 : len(s)-1]
+	log.WithField("base64", b64string).Debug("string to decode")
 	decodeBytes, err := base64.StdEncoding.DecodeString(b64string)
 	if err != nil {
 		return nil, err
@@ -39,20 +39,16 @@ func DecryptFromString(s string, label string, file string) ([]byte, error) {
 // Decrypt will decrypt the data bytes using the PEM
 // private key
 func Decrypt(data []byte, label string, file string) ([]byte, error) {
-	block, err := extractPemDataBlock(file)
+	var privkey rsa.PrivateKey
+	err := loadKey(file, &privkey)
 	if err != nil {
+		log.WithField("file", file).WithError(err).Error("could not load private key")
 		return nil, err
 	}
 
-	privkey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	decryptedValue, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, &privkey, data, []byte(label))
 	if err != nil {
-		log.WithField("file", file).Error("could not parse private key")
-		return nil, err
-	}
-
-	decryptedValue, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privkey, data, []byte(label))
-	if err != nil {
-		log.Error("could not decrypt data")
+		log.WithError(err).WithField("value", decryptedValue).Error("could not decrypt data")
 		return nil, err
 	}
 

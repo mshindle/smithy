@@ -21,9 +21,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/mshindle/smithy/config"
-	"github.com/mshindle/smithy/data"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/mshindle/smithy/data"
 )
 
 const defaultBaseDir = "$HOME/.smithy"
@@ -102,8 +102,8 @@ func initConfig() {
 
 	// set configuration defaults
 	viper.SetDefault("encryptMethod", "rsa")
-	viper.SetDefault("publicKey", "public_key.pem")
-	viper.SetDefault("privateKey", "private_key.pem")
+	viper.SetDefault("publicKey", "public.key")
+	viper.SetDefault("privateKey", "private.key")
 	viper.SetDefault("logging.level", "warn")
 
 	// load into settings

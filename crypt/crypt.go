@@ -17,50 +17,44 @@ package crypt
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
-	"errors"
-	"io/ioutil"
 
 	log "github.com/Sirupsen/logrus"
 )
 
+const BitSize = 1024
+
 // Generate creates a public / private key pair and saves them in the specified file
-func Generate(pubFile string, privateFile string) error {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
+func Generate(pubfile string, privfile string) error {
+	key, err := rsa.GenerateKey(rand.Reader, BitSize)
 	if err != nil {
 		return err
 	}
-	privatePem := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
-	})
-	ioutil.WriteFile(privateFile, privatePem, 0600)
-	log.WithField("file", privateFile).Info("private key written")
+	pubkey := key.PublicKey
 
-	pubKey, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	log.WithFields(log.Fields{
+		"prime0":         key.Primes[0].String(),
+		"prime1":         key.Primes[1].String(),
+		"exponent":       key.D.String(),
+		"pubkeyModulus":  pubkey.N.String(),
+		"pubkeyExponent": pubkey.E,
+	}).Info("key generated")
+
+	err = saveKey(privfile, key)
 	if err != nil {
+		log.WithField("file", privfile).Error("could not save private key")
 		return err
 	}
-	publicPem := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: pubKey,
-	})
-	ioutil.WriteFile(pubFile, publicPem, 0644)
-	log.WithField("file", pubFile).Info("public key written")
+
+	err = saveKey(pubfile, pubkey)
+	if err != nil {
+		log.WithField("file", pubfile).Error("could not save public key")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"privfile": privfile,
+		"pubfile":  pubfile,
+	}).Info("all key files written")
+
 	return nil
-}
-
-func extractPemDataBlock(file string) (*pem.Block, error) {
-	fileContents, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.WithField("file", file).Error("could not read file")
-		return nil, err
-	}
-	block, _ := pem.Decode(fileContents)
-	if block == nil {
-		log.WithField("file", file).Error("could not decode file contents - not PEM encoded")
-		return nil, errors.New("data not PEM encoded")
-	}
-	return block, nil
 }
